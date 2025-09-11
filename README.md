@@ -109,4 +109,84 @@ If object creation is very simple and unlikely to change.
 
 Using factory everywhere adds unnecessary abstraction and boilerplate.
 
-=========================================================================================
+
+# 🎯 Adapter Design Pattern (with Factory) – Talent Acquisition System Example
+
+## 📌 Overview
+The **Adapter Pattern** is a **structural design pattern** that allows incompatible interfaces to work together.  
+It introduces an adapter that translates one interface into another expected by the client.
+
+This repo demonstrates how to apply the **Adapter Pattern** (and extend it with a **Factory**) in a **Talent Acquisition (TA) System** that integrates candidate profiles from multiple job portals (LinkedIn, Naukri, Indeed).
+
+---
+
+## 🔹 When to Use
+- When integrating **legacy systems** or **3rd-party APIs** with incompatible interfaces.
+- When reusing existing functionality without modifying it.
+- When normalizing data from multiple sources into a **standard interface**.
+
+---
+
+## 🔹 Problem Statement
+In a Talent Acquisition system, candidate profiles come from different job portals:
+
+- **LinkedIn API** → `LinkedInProfile`
+- **Naukri API** → `NaukriProfile`
+- **Indeed API** → `IndeedProfile`
+
+Each API returns data in a **different structure**, but the TA system expects a **common interface**:
+
+```java
+public interface CandidateProfile {
+    String getFullName();
+    String getEmail();
+    String getPhone();
+}
+```
+
+---
+
+## 🔹 Solution with Adapter Pattern
+We use an **adapter** for each job portal to translate its profile format into the **standard `CandidateProfile` interface**.
+
+- `LinkedInProfileAdapter`
+- `NaukriProfileAdapter`
+- `IndeedProfileAdapter`
+
+This ensures the TA system only interacts with `CandidateProfile`, regardless of the data source.
+
+---
+
+## 🔹 Scaling with Factory + Adapter
+To make the solution **production-ready**, we introduce a **Factory**:
+
+```java
+public class CandidateProfileAdapterFactory {
+    public static CandidateProfile getAdapter(SourceType sourceType, Object rawProfile) {
+        switch (sourceType) {
+            case LINKEDIN: return new LinkedInProfileAdapter((LinkedInProfile) rawProfile);
+            case NAUKRI:   return new NaukriProfileAdapter((NaukriProfile) rawProfile);
+            case INDEED:   return new IndeedProfileAdapter((IndeedProfile) rawProfile);
+            default: throw new IllegalArgumentException("Unsupported source: " + sourceType);
+        }
+    }
+}
+```
+
+- The **Factory** dynamically selects the correct adapter based on the `SourceType`.
+- Adding new job portals (e.g., Monster, Glassdoor) only requires adding a new adapter and enum value.
+- The TA system remains **scalable** and **loosely coupled**.
+
+---
+
+## 🔹 Benefits
+✅ **Consistency** → TA system processes only one standard model.  
+✅ **Extensibility** → New sources can be integrated with minimal changes.  
+✅ **Loose Coupling** → Core system is independent of 3rd-party APIs.  
+✅ **Industry Relevant** → Real ATS/HR systems use this approach for multi-job board integrations.
+
+---
+
+## 🔹 Interview-Style Explanation
+*"I applied the Adapter Pattern in a Talent Acquisition system to normalize candidate data from multiple job portals (LinkedIn, Naukri, Indeed) into a single interface.  
+Later, I extended it with a Factory to dynamically select the right adapter, making the system scalable, loosely coupled, and integration-ready."*
