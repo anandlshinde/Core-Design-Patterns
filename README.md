@@ -190,3 +190,178 @@ public class CandidateProfileAdapterFactory {
 ## 🔹 Interview-Style Explanation
 *"I applied the Adapter Pattern in a Talent Acquisition system to normalize candidate data from multiple job portals (LinkedIn, Naukri, Indeed) into a single interface.  
 Later, I extended it with a Factory to dynamically select the right adapter, making the system scalable, loosely coupled, and integration-ready."*
+
+
+
+
+# Chain of Responsibility Design Pattern -- TA System Example
+
+## 📌 Introduction
+
+The **Chain of Responsibility (CoR)** is a **behavioral design pattern**
+that allows a request to be passed along a chain of handlers.\
+Each handler decides either to process the request or pass it to the
+next handler in the chain.
+
+This is useful in **approval workflows**, **validations**, or
+**multi-step processes** where different roles are responsible for
+different actions.
+
+------------------------------------------------------------------------
+
+## 🔑 Key Concepts
+
+-   **Handler** → Defines an interface for handling requests.\
+-   **Concrete Handlers** → Implement handling logic; pass request
+    further if they can't fully process it.\
+-   **Client** → Sends the request; doesn't need to know which handler
+    will process it.
+
+------------------------------------------------------------------------
+
+## 🎯 When to Use
+
+-   When multiple objects may handle a request, and you don't know in
+    advance which one will.\
+-   To avoid coupling request senders with specific receivers.\
+-   For workflows with **dynamic approval steps** (can be added/removed
+    easily).
+
+------------------------------------------------------------------------
+
+## 🏢 Example in Talent Acquisition (TA) System
+
+In a **candidate hiring workflow**, approvals usually happen in
+sequence: 1. **Recruiter Review**\
+2. **Hiring Manager Approval**\
+3. **HR Compliance Approval**\
+4. **Finance Approval** (salary budget validation)
+
+Instead of hardcoding this flow, we build a **chain of approvers** using
+CoR.
+
+------------------------------------------------------------------------
+
+## 📊 Class Diagram
+
+    Handler (Approver)
+       ↑
+    ConcreteHandler1 (Recruiter)
+    ConcreteHandler2 (Hiring Manager)
+    ConcreteHandler3 (HR)
+    ConcreteHandler4 (Finance)
+
+    Client → submits candidate → Handler chain → processed
+
+------------------------------------------------------------------------
+
+## 💻 Implementation (Java)
+
+``` java
+// Handler
+abstract class Approver {
+    protected Approver nextApprover;
+
+    public void setNextApprover(Approver nextApprover) {
+        this.nextApprover = nextApprover;
+    }
+
+    public abstract void approveRequest(String candidateName, double salary);
+}
+
+// Concrete Handlers
+class Recruiter extends Approver {
+    @Override
+    public void approveRequest(String candidateName, double salary) {
+        System.out.println("Recruiter reviewed candidate: " + candidateName);
+        if (nextApprover != null) {
+            nextApprover.approveRequest(candidateName, salary);
+        }
+    }
+}
+
+class HiringManager extends Approver {
+    @Override
+    public void approveRequest(String candidateName, double salary) {
+        System.out.println("Hiring Manager approved candidate: " + candidateName);
+        if (nextApprover != null) {
+            nextApprover.approveRequest(candidateName, salary);
+        }
+    }
+}
+
+class HR extends Approver {
+    @Override
+    public void approveRequest(String candidateName, double salary) {
+        System.out.println("HR approved candidate for compliance: " + candidateName);
+        if (nextApprover != null) {
+            nextApprover.approveRequest(candidateName, salary);
+        }
+    }
+}
+
+class Finance extends Approver {
+    @Override
+    public void approveRequest(String candidateName, double salary) {
+        if (salary <= 2000000) {
+            System.out.println("Finance approved candidate salary for: " + candidateName);
+        } else {
+            System.out.println("Finance rejected candidate due to high salary: " + candidateName);
+        }
+    }
+}
+
+// Client
+public class ChainOfResponsibilityTA {
+    public static void main(String[] args) {
+        Approver recruiter = new Recruiter();
+        Approver manager = new HiringManager();
+        Approver hr = new HR();
+        Approver finance = new Finance();
+
+        // Build chain
+        recruiter.setNextApprover(manager);
+        manager.setNextApprover(hr);
+        hr.setNextApprover(finance);
+
+        // Requests
+        recruiter.approveRequest("John Doe", 1500000);
+        System.out.println("-------------------");
+        recruiter.approveRequest("Jane Smith", 2500000);
+    }
+}
+```
+
+------------------------------------------------------------------------
+
+## 📜 Sample Output
+
+    Recruiter reviewed candidate: John Doe
+    Hiring Manager approved candidate: John Doe
+    HR approved candidate for compliance: John Doe
+    Finance approved candidate salary for: John Doe
+    -------------------
+    Recruiter reviewed candidate: Jane Smith
+    Hiring Manager approved candidate: Jane Smith
+    HR approved candidate for compliance: Jane Smith
+    Finance rejected candidate due to high salary: Jane Smith
+
+------------------------------------------------------------------------
+
+## ✅ Industry Usage in TA Systems
+
+-   **Approval Workflows** → Candidate approval, Requisition approval,
+    Offer approval.\
+-   **Background Check Process** → Criminal → Education → Experience
+    verification.\
+-   **Job Posting Validation** → Recruiter → Compliance → Publishing.\
+-   **Expense Reimbursement** → Recruiter → HR → Finance.
+
+------------------------------------------------------------------------
+
+## 🚀 Benefits
+
+-   Decouples **request sender** from **request processors**.\
+-   Flexible --- add/remove/change approval steps without changing
+    client code.\
+-   Increases **reusability** of handlers.
